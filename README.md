@@ -1,8 +1,7 @@
 # ebpy: Nonparametric Empirical Bayes in Python
 
 Nonparametric Maximum Likelihood Estimator (NPMLE) for estimating Gaussian location mixture densities in d-dimensions from independent, potentially heteroscedastic observations. Example usage:
-<pre><code>
-from ebpy import GLMixture
+<pre><code>from ebpy import GLMixture
 
 m = GLMixture()
 

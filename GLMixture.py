@@ -283,7 +283,7 @@ class GLMixture:
         print(' ' * (30 + 2*len(str(max_iter_em))), end='\r', flush=True)    
         print('Running EM: done.', end='\r', flush=True)
         
-        return llik
+        if (score_every is not None): return llik
         
     def score(self, X, prec, n_chunks=1, 
               log_prob_thresh=-float('Inf')):
@@ -300,7 +300,7 @@ class GLMixture:
                     log_prob_thresh, row_condition=False)
         return(np.mean(np.log(K.dot(self.weights))))
         
-    def posterior_mean(self, X, prec):
+    def posterior_mean(self, X, prec, row_condition=True):
         """
         given:
            an n x d observation matrix X,
@@ -312,6 +312,7 @@ class GLMixture:
            model, using the prior defined by atoms and weights. 
        """
         a, w = self.get_params()
-        A = mvn_pdf(X, a, prec, self.prec_type, self.homoscedastic)
+        A = mvn_pdf(X, a, prec, self.prec_type, self.homoscedastic, 
+                row_condition=row_condition)
         return(((A.dot(a * w[:, np.newaxis])) 
                / np.ravel(A.dot(w))[:, np.newaxis]))

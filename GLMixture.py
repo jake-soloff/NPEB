@@ -280,10 +280,11 @@ class GLMixture:
                 print('Running EM: iteration %s / %s' %(_, max_iter_em), end='\r', flush=True)
                 self.set_params(atoms, weights)
                 llik.append(self.score(X, prec))
-        print(' ' * (30 + 2*len(str(max_iter_em))), end='\r', flush=True)    
-        print('Running EM: done.', end='\r', flush=True)
-        
-        if (score_every is not None): return llik
+       
+        if (score_every is not None): 
+            print(' ' * (30 + 2*len(str(max_iter_em))), end='\r', flush=True)    
+            print('Running EM: done.', end='\r', flush=True)
+            return llik
         
     def score(self, X, prec, n_chunks=1, 
               log_prob_thresh=-float('Inf')):

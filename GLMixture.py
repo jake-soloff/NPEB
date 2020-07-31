@@ -77,7 +77,7 @@ def mvn_pdf(X, atoms, prec, prec_type, homoscedastic,
     ind_list = np.array_split(np.arange(n), n_chunks)
     res = []
     for inds in ind_list:
-        A = log_mvn_pdf(X[inds], atoms, prec[inds], prec_type, homoscedastic)
+        A = log_mvn_pdf(X[inds], atoms, prec if homoscedastic else prec[inds], prec_type, homoscedastic)
         if row_condition:
             A = A - np.max(A, 1)[:, np.newaxis]
         A[A < log_prob_thresh] = -float('Inf')

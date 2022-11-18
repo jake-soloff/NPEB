@@ -3,7 +3,7 @@
 Nonparametric Maximum Likelihood Estimator (NPMLE) for estimating Gaussian location mixture densities in d-dimensions from independent, potentially heteroscedastic observations. 
 
 Basic usage:
-<pre><code>from ebpy import GLMixture
+<pre><code>from ebpy.GLMixture import *
 
 m = GLMixture()
 

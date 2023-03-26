@@ -21,7 +21,15 @@ def log_mvn_pdf(X, atoms, prec, prec_type, homoscedastic):
        and MVN(X | μ, Ω) is the density of a multivariate 
        normal with mean μ and precision Ω evaluated at X.
     """
+    if prec_type not in ['diagonal', 'general']:
+        raise Exception("prec_type must be 'general' or 'diagonal'")
+    if len(X.shape)==1:
+        X = X[:, np.newaxis]
     n, d = X.shape
+    if d==1:
+        prec = np.squeeze(prec)
+        prec = prec[:, np.newaxis]
+        if prec_type=='general': prec = prec[:, np.newaxis]
     
     ## the (squared) mahalanobis distance M between all pairs
     ## and the log-determinant ld of the precision matrices

@@ -1,4 +1,4 @@
-# ebpy: Empirical Bayes in Python
+# npeb: Nonparametric Empirical Bayes in Python
 
 Nonparametric Maximum Likelihood Estimator (NPMLE) for estimating Gaussian location mixture densities in d-dimensions from independent, potentially heteroscedastic observations. 
 

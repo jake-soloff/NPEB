@@ -86,7 +86,7 @@ class PMixture:
         self.atoms_init = X[np.random.choice(X.shape[0], size=n_atoms, replace=False)]
 
     def initialize_atoms_grid(self, X, n_atoms):
-        self.atoms_init = np.linspace(X.min(), X.max(), n_atoms)
+        self.atoms_init = np.linspace(0, X.max()+1, n_atoms)
 
     def fit(self, X, **solver_params):
         self.n = len(X)
@@ -101,7 +101,7 @@ class PMixture:
             
         A = pois_pmf(vals, atoms)
         weights = solve_weights_mosek(A, cts, **solver_params)
-        self.set_params(atoms, weights)
+        self.set_params(atoms, np.maximum(weights, 0))
 
     def posterior_mean(self, X):
         a, w = self.get_params()

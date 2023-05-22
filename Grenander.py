@@ -133,7 +133,7 @@ def local_fdr(p, zeta=None):
     Parameters
     ----------
 
-    p : array-like of shape (n,)
+    p : array-like of shape (m,)
         observed p-values
 
     zeta : float or None
@@ -143,7 +143,7 @@ def local_fdr(p, zeta=None):
     Returns
     -------
 
-    l : array-like of shape (n,)
+    l : array-like of shape (m,)
         the estimated l-values
     
     fdr : function
@@ -159,6 +159,37 @@ def local_fdr(p, zeta=None):
     fhat = gren.fit(p)
 
     return(pi0_est/fhat, lambda t: pi0_est/gren.pdf(t))
+
+def support_line(p, tol):
+    """Control the local false discovery rate using the SL procedure.
+
+    Parameters
+    ----------
+
+    p : array-like of shape (m,)
+        observed p-values
+
+    Returns
+    -------
+
+    R : integer
+        the number of rejections
+    
+    tau : float
+        the rejection threshold
+
+    rejected : array-like of shape (m,)
+        rejected[i] indicates whether p[i] is rejected
+
+    """
+    m = len(p)
+    p_ = np.sort(p)
+    p__ = np.hstack([0, p_])
+
+    T = np.arange(m+1)/m
+    R = np.argmin(p__-tol*T)
+    tau = p__[R]
+    return(R, tau, p <= tau)
 
 if __name__=="__main__":
     import matplotlib.pyplot as plt

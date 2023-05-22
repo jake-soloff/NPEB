@@ -85,7 +85,9 @@ def mvn_pdf(X, atoms, prec, prec_type, homoscedastic,
     ind_list = np.array_split(np.arange(n), n_chunks)
     res = []
     for inds in ind_list:
-        A = log_mvn_pdf(X[inds], atoms, prec if homoscedastic else prec[inds], prec_type, homoscedastic)
+        A = log_mvn_pdf(X[inds], atoms, 
+                        prec if homoscedastic else prec[inds], 
+                        prec_type, homoscedastic)
         if row_condition:
             A = A - np.max(A, 1)[:, np.newaxis]
         A[A < log_prob_thresh] = -float('Inf')
@@ -112,7 +114,8 @@ def solve_weights_mosek(K, use_sparse=True, **solver_params):
     ## exponential cone constraints
     for i in range(n):
         ## constrains t[i] ≤ log(u[i]) and u[i] ≥ 0
-        M.constraint(Expr.hstack(u.index(i), 1, t.index(i)), Domain.inPExpCone())
+        M.constraint(Expr.hstack(u.index(i), 1, t.index(i)), 
+                     Domain.inPExpCone())
     M.constraint(Expr.sum(w), Domain.equalsTo(1.0))
     if use_sparse:
         K = K.tocoo()
@@ -185,7 +188,9 @@ class GLMixture:
         self.atoms, self.weights = atoms, weights
         
     def initialize_atoms_subsample(self, X, n_atoms):
-        self.atoms_init = X[np.random.choice(X.shape[0], size=n_atoms, replace=False)]
+        self.atoms_init = X[np.random.choice(X.shape[0], 
+                                             size=n_atoms, 
+                                             replace=False)]
     
     def fit(self, X, prec, max_iter_em=10, weight_thresh=0., 
             n_chunks=1, log_prob_thresh=-float('Inf'), row_condition=False, 
@@ -285,7 +290,8 @@ class GLMixture:
                     atoms = np.array(num/dnm)
                     
             if (score_every is not None) and (_ % score_every == 0): 
-                print('Running EM: iteration %s / %s' %(_, max_iter_em), end='\r', flush=True)
+                print('Running EM: iteration %s / %s' %(_, max_iter_em), 
+                      end='\r', flush=True)
                 self.set_params(atoms, weights)
                 llik.append(self.score(X, prec))
        

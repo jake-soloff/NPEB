@@ -39,8 +39,8 @@ def solve_weights_mosek(A, nks, **solver_params):
         log(M, t.index(i), u.index(i))
     M.constraint(Expr.sum(w), Domain.equalsTo(1.0))
     for i in range(n):
-        M.constraint(Expr.sub(Expr.dot(A[i], w), u.index(i)), Domain.equalsTo(0.0))
-
+        M.constraint(Expr.sub(Expr.dot(A[i], w), u.index(i)), 
+                     Domain.equalsTo(0.0))
 
     # Set the objective function to sum_i t_i * nks_i
     M.objective("obj", ObjectiveSense.Maximize, Expr.dot(t, nks))
@@ -48,7 +48,6 @@ def solve_weights_mosek(A, nks, **solver_params):
     # Solve
     M.solve()
     return w.level()
- 
 
 class PMixture:
     """
@@ -83,7 +82,9 @@ class PMixture:
         self.atoms, self.weights = atoms, weights
 
     def initialize_atoms_subsample(self, X, n_atoms):
-        self.atoms_init = X[np.random.choice(X.shape[0], size=n_atoms, replace=False)]
+        self.atoms_init = X[np.random.choice(X.shape[0], 
+                                             size=n_atoms, 
+                                             replace=False)]
 
     def initialize_atoms_grid(self, X, n_atoms):
         self.atoms_init = np.linspace(0, X.max()+1, n_atoms)

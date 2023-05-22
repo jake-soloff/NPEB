@@ -103,6 +103,39 @@ class Grenander:
         # return fitted values in original order
         return fitted_values
 
+def lfdr(p, zeta=None): 
+    """Estimate the local false discovery rate using the Grenander estimator.
+
+    Parameters
+    ----------
+
+    p : array-like of shape (n,)
+        observed p-values
+
+    zeta : float or None
+        threshold used for estimating null proportion pi0
+        if None, the estimate pi0=1 is used
+
+    Returns
+    -------
+
+    l : array-like of shape (n,)
+        the estimated l-values
+    
+    fdr : function
+        maps a p-value to its estimated lfdr
+
+    """
+    if zeta is not None:
+        pi0 = (np.sum(p>zeta)+1)/((1-zeta)*len(p))
+    else:
+        pi0 = 1
+
+    gren = Grenander(x_max=1)
+    fhat = gren.fit(p)
+
+    return(pi0/fhat, lambda t: pi0/gren.pdf(t))
+
 if __name__=="__main__":
     import matplotlib.pyplot as plt
 
@@ -132,6 +165,31 @@ if __name__=="__main__":
     plt.plot(xx, m.pdf(xx), 'b.')
     plt.ylim([-.01, 2])
     plt.xlim([0, 1])
+
+    ax = plt.gca()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_position('zero')
+    ax.spines['left'].set_position('zero')
+
+    plt.show()
+
+    n = 2000
+    pi0 = .75
+    p = np.random.rand(n)
+    a, b = .3, 1
+    p[1500:] = np.random.beta(a, b, 500)
+
+    _, l = lfdr(p, zeta=.5)
+
+    from scipy import stats
+
+    tt = np.linspace(0, 1, 10000)
+    plt.plot(tt, pi0/(pi0+(1-pi0)*stats.beta.pdf(tt, a, b)), 'k-')
+    plt.plot(tt, l(tt), 'b--')
+
+    plt.ylim([-.01, .5])
+    plt.xlim([0, .01])
 
     ax = plt.gca()
     ax.spines['top'].set_visible(False)

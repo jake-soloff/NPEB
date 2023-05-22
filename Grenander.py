@@ -1,7 +1,12 @@
 import numpy as np
 from scipy.interpolate import interp1d
 from sklearn.isotonic import isotonic_regression
+from sklearn.exceptions import NotFittedError
 
+def check_is_fitted(model):
+    if not model.__is_fitted__: raise NotFittedError 
+
+# to do -- change this to extend sklearn.base.BaseEstimator
 class Grenander:
     """Grenander estimator of a monotone decreasing density.
 
@@ -39,6 +44,7 @@ class Grenander:
     def __init__(self, x_min=0, x_max=float('Inf')):
         self.x_min = x_min
         self.x_max = x_max
+        self.__is_fitted__ = False
 
     def fit(self, x):
         """Compute the Grenander estimator using isotonic regression.
@@ -70,7 +76,6 @@ class Grenander:
         slopes = isotonic_regression(np.ones(n)/(n*w), 
                                      sample_weight=w.copy(), 
                                      increasing=False)
-        fitted_values = slopes[I.argsort()]
         
         # save only the knots for faster computation
         keep = np.ones(n, dtype=bool)
@@ -99,11 +104,30 @@ class Grenander:
                             np.hstack([np.nan, self.slopes]), 
                             kind='next',
                             assume_sorted=True)
+        
+        self.__is_fitted__ = True
 
         # return fitted values in original order
+        fitted_values = slopes[I.argsort()]
         return fitted_values
+    
+    def get_params(self):
+        check_is_fitted(self)
+        params = {'knots':self.knots,
+                  'heights':self.heights,
+                  'slopes':self.slopes,
+                  'cdf':self.cdf,
+                  'pdf':self.pdf,}
+        return params
 
-def lfdr(p, zeta=None): 
+    def score_samples(self, x):
+        check_is_fitted(self)
+        return np.log(self.pdf(x))
+
+    def score(self, x):
+        return np.sum(self.score_samples(x))
+
+def local_fdr(p, zeta=None): 
     """Estimate the local false discovery rate using the Grenander estimator.
 
     Parameters
@@ -127,29 +151,30 @@ def lfdr(p, zeta=None):
 
     """
     if zeta is not None:
-        pi0 = (np.sum(p>zeta)+1)/((1-zeta)*len(p))
+        pi0_est = (np.sum(p>zeta)+1)/((1-zeta)*len(p))
     else:
-        pi0 = 1
+        pi0_est = 1
 
     gren = Grenander(x_max=1)
     fhat = gren.fit(p)
 
-    return(pi0/fhat, lambda t: pi0/gren.pdf(t))
+    return(pi0_est/fhat, lambda t: pi0_est/gren.pdf(t))
 
 if __name__=="__main__":
     import matplotlib.pyplot as plt
+    np.random.seed(1234567891)
 
     n = 50
     x = np.random.beta(.4, 1, n)
-    m = Grenander(x_max=1)
+    gren = Grenander(x_max=1)
 
-    slopes = m.fit(x)
+    slopes = gren.fit(x)
 
     plt.figure(figsize=(8,8))
     plt.plot(np.sort(x), np.arange(1,n+1)/n, 'b.')
-    plt.plot(m.knots, m.heights, 'r.-')
-    xx = np.linspace(0, 1, 1000)
-    plt.plot(xx, m.cdf(xx), 'g--')
+    plt.plot(gren.knots, gren.heights, 'r.-')
+    xx = np.linspace(0, 1, 10000)
+    plt.plot(xx, gren.cdf(xx), 'g--')
 
     ax = plt.gca()
     ax.spines['top'].set_visible(False)
@@ -162,7 +187,7 @@ if __name__=="__main__":
     plt.show()
 
     plt.plot(x, slopes, 'b.')
-    plt.plot(xx, m.pdf(xx), 'b.')
+    plt.step(xx, gren.pdf(xx), color='b')
     plt.ylim([-.01, 2])
     plt.xlim([0, 1])
 
@@ -174,21 +199,21 @@ if __name__=="__main__":
 
     plt.show()
 
-    n = 2000
+    n = 10000
     pi0 = .75
     p = np.random.rand(n)
     a, b = .3, 1
-    p[1500:] = np.random.beta(a, b, 500)
+    p[7500:] = np.random.beta(a, b, 2500)
 
-    _, l = lfdr(p, zeta=.5)
+    _, lfdr = local_fdr(p, zeta=.8)
 
     from scipy import stats
 
     tt = np.linspace(0, 1, 10000)
     plt.plot(tt, pi0/(pi0+(1-pi0)*stats.beta.pdf(tt, a, b)), 'k-')
-    plt.plot(tt, l(tt), 'b--')
+    plt.plot(tt, lfdr(tt), 'b-')
 
-    plt.ylim([-.01, .5])
+    plt.ylim([-.01, .31])
     plt.xlim([0, .01])
 
     ax = plt.gca()

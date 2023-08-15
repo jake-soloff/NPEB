@@ -2,7 +2,15 @@ import numpy as np
 import scipy.sparse as sparse
 from sklearn.preprocessing import normalize
 
-from mosek.fusion import *
+try:
+    from mosek.fusion import *
+except:
+    print("Warning: Could not load module named mosek.fusion")
+
+try:
+    import cvxpy as cvx
+except:
+    print("Warning: Could not load module named cvxpy")
 
 def log_mvn_pdf(X, atoms, prec, prec_type, homoscedastic):
     """
@@ -21,15 +29,7 @@ def log_mvn_pdf(X, atoms, prec, prec_type, homoscedastic):
        and MVN(X | μ, Ω) is the density of a multivariate 
        normal with mean μ and precision Ω evaluated at X.
     """
-    #if prec_type not in ['diagonal', 'general']:
-    #    raise Exception("prec_type must be 'general' or 'diagonal'")
-    #if len(X.shape)==1:
-    #    X = X[:, np.newaxis]
     n, d = X.shape
-    #if d==1:
-    #    prec = np.squeeze(prec)
-    #    prec = prec[:, np.newaxis]
-    #    if prec_type=='general': prec = prec[:, np.newaxis]
     
     ## the (squared) mahalanobis distance M between all pairs
     ## and the log-determinant ld of the precision matrices
@@ -94,6 +94,29 @@ def mvn_pdf(X, atoms, prec, prec_type, homoscedastic,
         res.append(sparse.csr_matrix(np.exp(A)))
     return(sparse.vstack(res))
 
+
+def solve_weights_cvx(K, **solver_params):
+    """
+    given:
+       an n x m kernel K csr_matrix of 
+       probabilities, scaled by row
+    return:
+       the weights w_1,…,w_m maximizing 
+        sum_{i=1}^n log(Aw)_i    
+       using cvxpy
+    """
+    n,m = K.shape
+    A = K.toarray()
+
+    w = cvx.Variable(m)
+    constraints = [w >= 0, cvx.sum(w) == 1]
+    obj = cvx.Maximize(cvx.sum(cvx.log(A @ w)))
+
+    prob = cvx.Problem(obj, constraints)
+    prob.solve(**solver_params)
+
+    return(w.value)
+
 def solve_weights_mosek(K, use_sparse=True, **solver_params):
     """
     given:
@@ -101,8 +124,8 @@ def solve_weights_mosek(K, use_sparse=True, **solver_params):
        probabilities, scaled by row
     return:
        the weights w_1,…,w_m maximizing 
-       sum_{i=1}^n log(Aw)_i    
-       via an exponential cone program
+        sum_{i=1}^n log(Aw)_i    
+       via an exponential cone program in mosek
     """
     n,m = K.shape
     M = Model()
@@ -194,7 +217,7 @@ class GLMixture:
     
     def fit(self, X, prec, max_iter_em=10, weight_thresh=0., 
             n_chunks=1, log_prob_thresh=-float('Inf'), row_condition=False, 
-            score_every=1, **solver_params):
+            score_every=1, solver='mosek', **solver_params):
         """
         given:
            an n x d observation ndarray X,
@@ -248,9 +271,13 @@ class GLMixture:
         
         ## solve for the optimal weights given locations atoms_init
         print('Solving for discretized NPMLE:', end=' ')
-        w = solve_weights_mosek(K, 
-                               use_sparse=(log_prob_thresh > -float('Inf')), 
-                               **solver_params)
+        if solver=='mosek':
+            w = solve_weights_mosek(K, 
+                                   use_sparse=(log_prob_thresh > -float('Inf')), 
+                                   **solver_params)
+        elif solver=='cvxpy':
+            w = solve_weights_cvx(K, # no use_sparse option
+                                  **solver_params)
         print('done.')
         
         ## threshold weights

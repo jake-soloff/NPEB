@@ -217,7 +217,7 @@ class GLMixture:
     
     def fit(self, X, prec, max_iter_em=10, weight_thresh=0., 
             n_chunks=1, log_prob_thresh=-float('Inf'), row_condition=False, 
-            score_every=1, solver='mosek', **solver_params):
+            score_every=1, solver='cvxpy', **solver_params):
         """
         given:
            an n x d observation ndarray X,

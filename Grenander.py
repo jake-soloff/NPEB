@@ -6,7 +6,6 @@ from sklearn.exceptions import NotFittedError
 def check_is_fitted(model):
     if not model.__is_fitted__: raise NotFittedError 
 
-# to do -- change this to extend sklearn.base.BaseEstimator
 class Grenander:
     """Grenander estimator of a monotone decreasing density.
 
@@ -202,10 +201,10 @@ if __name__=="__main__":
     slopes = gren.fit(x)
 
     plt.figure(figsize=(8,8))
-    plt.plot(np.sort(x), np.arange(1,n+1)/n, 'b.')
-    plt.plot(gren.knots, gren.heights, 'r.-')
+    plt.plot(np.sort(x), np.arange(1,n+1)/n, 'b.', label='Empirical cdf')
     xx = np.linspace(0, 1, 10000)
-    plt.plot(xx, gren.cdf(xx), 'g--')
+    plt.plot(xx, gren.cdf(xx), 'r-', label='Least concave majorant')
+    plt.legend()
 
     ax = plt.gca()
     ax.spines['top'].set_visible(False)
@@ -219,6 +218,8 @@ if __name__=="__main__":
 
     plt.plot(x, slopes, 'b.')
     plt.step(xx, gren.pdf(xx), color='b')
+    plt.title('Density estimate')
+
     plt.ylim([-.01, 2])
     plt.xlim([0, 1])
 
@@ -240,9 +241,12 @@ if __name__=="__main__":
 
     from scipy import stats
 
-    tt = np.linspace(0, 1, 10000)
-    plt.plot(tt, pi0/(pi0+(1-pi0)*stats.beta.pdf(tt, a, b)), 'k-')
-    plt.plot(tt, lfdr(tt), 'b-')
+    tt = np.linspace(0, np.max(p), 10000)
+    plt.plot(tt, pi0/(pi0+(1-pi0)*stats.beta.pdf(tt, a, b)), 
+             'k-', label='True lfdr')
+    plt.plot(tt, lfdr(tt), 'b-', label='Estimated lfdr')
+    plt.legend()
+    plt.title('Local false discovery rate')
 
     plt.ylim([-.01, .31])
     plt.xlim([0, .01])

@@ -2,7 +2,10 @@ import numpy as np
 import pandas as pd
 from scipy.stats import poisson
 
-from mosek.fusion import *
+try:
+    from mosek.fusion import *
+except:
+    print("Warning: Could not load module named mosek.fusion")
 
 def pois_pmf(X, atoms):
     if len(X.shape) > 1:

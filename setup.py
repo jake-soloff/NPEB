@@ -8,7 +8,7 @@ setup(
   author = 'Jake A. Soloff',
   author_email = 'jakesoloff@gmail.com',     
   url = 'https://github.com/jake-soloff/NPEB', 
-  download_url = 'https://github.com/jake-soloff/NPEB/archive/v_001.tar.gz', 
+  download_url = 'https://github.com/jake-soloff/NPEB/archive/refs/tags/v_001.tar.gz',
   keywords = ['Empirical Bayes', 'NPMLE', 'Mixture models'], 
   install_requires=[      
           'numpy',

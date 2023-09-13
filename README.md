@@ -4,8 +4,8 @@ Nonparametric Maximum Likelihood Estimator (NPMLE) for estimating Gaussian locat
 
 ## Installation
 
-The easiest way to install npeb is using pip:
-<pre><code> pip install </code></pre>
+The easiest way to install npeb is using ``pip``:
+<pre><code> pip install npeb </code></pre>
 
 ## Basic usage
 <pre><code>from npeb import GLMixture
